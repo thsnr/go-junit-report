@@ -26,7 +26,7 @@ type Report struct {
 // Package contains the test results of a single package.
 type Package struct {
 	Name        string
-	Time        int
+	Time        float64
 	Tests       []*Test
 	CoveragePct string
 }
@@ -34,7 +34,7 @@ type Package struct {
 // Test contains the results of a single test.
 type Test struct {
 	Name   string
-	Time   int
+	Time   float64
 	Result Result
 	Output []string
 }
@@ -57,7 +57,7 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 	var tests []*Test
 
 	// sum of tests' time, use this if current test has no result line (when it is compiled test)
-	testsTime := 0
+	var testsTime float64
 
 	// current test
 	var cur string
@@ -118,7 +118,7 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 			}
 
 			test.Name = matches[2]
-			testTime := parseTime(matches[3]) * 10
+			testTime := parseTime(matches[3])
 			test.Time = testTime
 			testsTime += testTime
 		} else if matches := regexCoverage.FindStringSubmatch(line); len(matches) == 2 {
@@ -146,8 +146,8 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 	return report, nil
 }
 
-func parseTime(time string) int {
-	t, err := strconv.Atoi(strings.Replace(time, ".", "", -1))
+func parseTime(time string) float64 {
+	t, err := strconv.ParseFloat(time, 64)
 	if err != nil {
 		return 0
 	}

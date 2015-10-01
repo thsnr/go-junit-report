@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/xml"
-	"fmt"
 	"io"
 	"runtime"
 	"strings"
@@ -23,8 +22,8 @@ type JUnitTestSuite struct {
 	XMLName    xml.Name        `xml:"testsuite"`
 	Tests      int             `xml:"tests,attr"`
 	Failures   int             `xml:"failures,attr"`
-	Time       string          `xml:"time,attr"`
 	Name       string          `xml:"name,attr"`
+	Time       float64         `xml:"time,attr"`
 	Properties []JUnitProperty `xml:"properties>property,omitempty"`
 	TestCases  []JUnitTestCase
 }
@@ -34,7 +33,7 @@ type JUnitTestCase struct {
 	XMLName     xml.Name          `xml:"testcase"`
 	Classname   string            `xml:"classname,attr"`
 	Name        string            `xml:"name,attr"`
-	Time        string            `xml:"time,attr"`
+	Time        float64           `xml:"time,attr"`
 	SkipMessage *JUnitSkipMessage `xml:"skipped,omitempty"`
 	Failure     *JUnitFailure     `xml:"failure,omitempty"`
 }
@@ -67,7 +66,7 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 		ts := JUnitTestSuite{
 			Tests:      len(pkg.Tests),
 			Failures:   0,
-			Time:       formatTime(pkg.Time),
+			Time:       pkg.Time,
 			Name:       pkg.Name,
 			Properties: []JUnitProperty{},
 			TestCases:  []JUnitTestCase{},
@@ -89,7 +88,7 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 			testCase := JUnitTestCase{
 				Classname: classname,
 				Name:      test.Name,
-				Time:      formatTime(test.Time),
+				Time:      test.Time,
 				Failure:   nil,
 			}
 
@@ -138,8 +137,4 @@ func countFailures(tests []parser.Test) (result int) {
 		}
 	}
 	return
-}
-
-func formatTime(time int) string {
-	return fmt.Sprintf("%.3f", float64(time)/1000.0)
 }
