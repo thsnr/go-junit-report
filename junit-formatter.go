@@ -20,9 +20,10 @@ type JUnitTestSuites struct {
 // testcases.
 type JUnitTestSuite struct {
 	XMLName    xml.Name        `xml:"testsuite"`
+	Package    string          `xml:"package,attr"`
+	Name       string          `xml:"name,attr"`
 	Tests      int             `xml:"tests,attr"`
 	Failures   int             `xml:"failures,attr"`
-	Name       string          `xml:"name,attr"`
 	Time       float64         `xml:"time,attr"`
 	Properties []JUnitProperty `xml:"properties>property,omitempty"`
 	TestCases  []JUnitTestCase
@@ -64,18 +65,21 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 
 	// convert Report to JUnit test suites
 	for _, pkg := range report.Packages {
+		pkgname := ""
+		classname := pkg.Name
+		if idx := strings.LastIndex(classname, "/"); idx > -1 && idx < len(pkg.Name) {
+			pkgname = pkg.Name[:idx]
+			classname = pkg.Name[idx+1:]
+		}
+
 		ts := JUnitTestSuite{
+			Package:    pkgname,
+			Name:       classname,
 			Tests:      len(pkg.Tests),
 			Failures:   0,
 			Time:       pkg.Time,
-			Name:       pkg.Name,
 			Properties: []JUnitProperty{},
 			TestCases:  []JUnitTestCase{},
-		}
-
-		classname := pkg.Name
-		if idx := strings.LastIndex(classname, "/"); idx > -1 && idx < len(pkg.Name) {
-			classname = pkg.Name[idx+1:]
 		}
 
 		// properties
