@@ -91,7 +91,7 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 		// individual test cases
 		for _, test := range pkg.Tests {
 			testCase := JUnitTestCase{
-				Classname: classname,
+				Classname: pkg.Name,
 				Name:      test.Name,
 				Time:      test.Time,
 				Failure:   nil,
