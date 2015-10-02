@@ -37,6 +37,7 @@ type Test struct {
 	Time   float64
 	Result Result
 	Output []string
+	Stdout []string
 }
 
 var (
@@ -62,6 +63,9 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 	// current test
 	var cur string
 
+	// is a test currently running
+	var inTest bool
+
 	// coverage percentage report for current package
 	var coveragePct string
 
@@ -79,6 +83,7 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 		if strings.HasPrefix(line, "=== RUN ") {
 			// new test
 			cur = strings.TrimSpace(line[8:])
+			inTest = true
 			tests = append(tests, &Test{
 				Name:   cur,
 				Result: FAIL,
@@ -121,6 +126,7 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 			testTime := parseTime(matches[3])
 			test.Time = testTime
 			testsTime += testTime
+			inTest = false
 		} else if matches := regexCoverage.FindStringSubmatch(line); len(matches) == 2 {
 			coveragePct = matches[1]
 		} else if strings.HasPrefix(line, "\t") {
@@ -130,6 +136,13 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 				continue
 			}
 			test.Output = append(test.Output, line[1:])
+		} else if inTest {
+			// system output
+			test := findTest(tests, cur)
+			if test == nil {
+				continue
+			}
+			test.Stdout = append(test.Stdout, line)
 		}
 	}
 

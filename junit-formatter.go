@@ -36,6 +36,7 @@ type JUnitTestCase struct {
 	Time        float64           `xml:"time,attr"`
 	SkipMessage *JUnitSkipMessage `xml:"skipped,omitempty"`
 	Failure     *JUnitFailure     `xml:"failure,omitempty"`
+	SystemOut   string            `xml:"system-out"`
 }
 
 // JUnitSkipMessage contains the reason why a testcase was skipped.
@@ -105,6 +106,11 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 				testCase.SkipMessage = &JUnitSkipMessage{strings.Join(test.Output, "\n")}
 			}
 
+			if test.Result == parser.PASS {
+				test.Stdout = append(test.Stdout, test.Output...)
+			}
+
+			testCase.SystemOut = strings.Join(test.Stdout, "\n")
 			ts.TestCases = append(ts.TestCases, testCase)
 		}
 
