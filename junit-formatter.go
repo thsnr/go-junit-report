@@ -73,7 +73,7 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 		}
 
 		ts := JUnitTestSuite{
-			Package:    pkgname,
+			Package:    strings.Replace(pkgname, "/", ".", -1),
 			Name:       classname,
 			Tests:      len(pkg.Tests),
 			Failures:   0,
@@ -91,7 +91,7 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 		// individual test cases
 		for _, test := range pkg.Tests {
 			testCase := JUnitTestCase{
-				Classname: pkg.Name,
+				Classname: strings.Replace(pkg.Name, "/", ".", -1),
 				Name:      test.Name,
 				Time:      test.Time,
 				Failure:   nil,
