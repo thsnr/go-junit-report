@@ -41,9 +41,11 @@ type Test struct {
 }
 
 var (
-	regexStatus   = regexp.MustCompile(`^--- (PASS|FAIL|SKIP): (.+) \((\d+\.\d+)(?: seconds|s)\)$`)
-	regexCoverage = regexp.MustCompile(`^coverage:\s+(\d+\.\d+)%\s+of\s+statements$`)
-	regexResult   = regexp.MustCompile(`^(ok|FAIL)\s+(.+)\s(\d+\.\d+)s(?:\s+coverage:\s+(\d+\.\d+)%\s+of\s+statements)?$`)
+	regexStatus   = regexp.MustCompile(`^\s*--- (PASS|FAIL|SKIP): (.+) \((\d+\.\d+)(?: seconds|s)\)$`)
+	regexCoverage = regexp.MustCompile(`^coverage:\s+(\d+\.\d+)%\s+of\s+statements(?:\sin\s.+)?$`)
+	regexResult   = regexp.MustCompile(`^(ok|FAIL)\s+([^ ]+)\s+(?:(\d+\.\d+)s|(\[\w+ failed]))(?:\s+coverage:\s+(\d+\.\d+)%\sof\sstatements(?:\sin\s.+)?)?$`)
+	regexOutput   = regexp.MustCompile(`(    )*\t(.*)`)
+	regexSummary  = regexp.MustCompile(`^(PASS|FAIL|SKIP)$`)
 )
 
 // Parse parses go test output from reader r and returns a report with the
@@ -63,11 +65,20 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 	// current test
 	var cur string
 
-	// is a test currently running
-	var inTest bool
+	// keep track if we've already seen a summary for the current test
+	var seenSummary bool
 
 	// coverage percentage report for current package
 	var coveragePct string
+
+	// stores mapping between package name and output of build failures
+	var packageCaptures = map[string][]string{}
+
+	// the name of the package which it's build failure output is being captured
+	var capturedPackage string
+
+	// capture any non-test output
+	var buffer []string
 
 	// parse lines
 	for {
@@ -83,15 +94,36 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 		if strings.HasPrefix(line, "=== RUN ") {
 			// new test
 			cur = strings.TrimSpace(line[8:])
-			inTest = true
 			tests = append(tests, &Test{
 				Name:   cur,
 				Result: FAIL,
 				Output: make([]string, 0),
 			})
-		} else if matches := regexResult.FindStringSubmatch(line); len(matches) == 5 {
-			if matches[4] != "" {
-				coveragePct = matches[4]
+
+			// clear the current build package, so output lines won't be added to that build
+			capturedPackage = ""
+			seenSummary = false
+		} else if matches := regexResult.FindStringSubmatch(line); len(matches) == 6 {
+			if matches[5] != "" {
+				coveragePct = matches[5]
+			}
+			if strings.HasSuffix(matches[4], "failed]") {
+				// the build of the package failed, inject a dummy test into the package
+				// which indicate about the failure and contain the failure description.
+				tests = append(tests, &Test{
+					Name:   matches[4],
+					Result: FAIL,
+					Output: packageCaptures[matches[2]],
+				})
+			} else if matches[1] == "FAIL" && len(tests) == 0 && len(buffer) > 0 {
+				// This package didn't have any tests, but it failed with some
+				// output. Create a dummy test with the output.
+				tests = append(tests, &Test{
+					Name:   "Failure",
+					Result: FAIL,
+					Output: buffer,
+				})
+				buffer = buffer[0:0]
 			}
 
 			// all tests in this package are finished
@@ -102,6 +134,7 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 				CoveragePct: coveragePct,
 			})
 
+			buffer = buffer[0:0]
 			tests = make([]*Test, 0)
 			coveragePct = ""
 			cur = ""
@@ -121,28 +154,35 @@ func Parse(r io.Reader, pkgName string) (*Report, error) {
 			} else {
 				test.Result = FAIL
 			}
+			test.Output = buffer
 
 			test.Name = matches[2]
 			testTime := parseTime(matches[3])
 			test.Time = testTime
 			testsTime += testTime
-			inTest = false
 		} else if matches := regexCoverage.FindStringSubmatch(line); len(matches) == 2 {
 			coveragePct = matches[1]
-		} else if strings.HasPrefix(line, "\t") {
-			// test output
+		} else if matches := regexOutput.FindStringSubmatch(line); capturedPackage == "" && len(matches) == 3 {
+			// Sub-tests start with one or more series of 4-space indents, followed by a hard tab,
+			// followed by the test output
+			// Top-level tests start with a hard tab.
 			test := findTest(tests, cur)
 			if test == nil {
 				continue
 			}
-			test.Output = append(test.Output, line[1:])
-		} else if inTest {
-			// system output
-			test := findTest(tests, cur)
-			if test == nil {
-				continue
-			}
-			test.Stdout = append(test.Stdout, line)
+			test.Output = append(test.Output, matches[2])
+		} else if strings.HasPrefix(line, "# ") {
+			// indicates a capture of build output of a package. set the current build package.
+			capturedPackage = line[2:]
+		} else if capturedPackage != "" {
+			// current line is build failure capture for the current built package
+			packageCaptures[capturedPackage] = append(packageCaptures[capturedPackage], line)
+		} else if regexSummary.MatchString(line) {
+			// don't store any output after the summary
+			seenSummary = true
+		} else if !seenSummary {
+			// buffer anything else that we didn't recognize
+			buffer = append(buffer, line)
 		}
 	}
 
@@ -168,7 +208,7 @@ func parseTime(time string) float64 {
 }
 
 func findTest(tests []*Test, name string) *Test {
-	for i := 0; i < len(tests); i++ {
+	for i := len(tests) - 1; i >= 0; i-- {
 		if tests[i].Name == name {
 			return tests[i]
 		}

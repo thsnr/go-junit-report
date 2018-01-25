@@ -355,6 +355,389 @@ var testCases = []TestCase{
 			},
 		},
 	},
+	{
+		name:       "12-go_1_7.txt",
+		reportName: "12-report.xml",
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name: "package/name",
+					Time: 50,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestOne",
+							Time:   10,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestOne/Child",
+							Time:   20,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestOne/Child#01",
+							Time:   30,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestOne/Child=02",
+							Time:   40,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestTwo",
+							Time:   10,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestTwo/Child",
+							Time:   20,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestTwo/Child#01",
+							Time:   30,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestTwo/Child=02",
+							Time:   40,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestThree",
+							Time:   10,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestThree/a#1",
+							Time:   20,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestThree/a#1/b#1",
+							Time:   30,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestThree/a#1/b#1/c#1",
+							Time:   40,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestFour",
+							Time:   20,
+							Result: parser.FAIL,
+							Output: []string{},
+						},
+						{
+							Name:   "TestFour/#00",
+							Time:   0,
+							Result: parser.FAIL,
+							Output: []string{
+								"example.go:12: Expected abc  OBTAINED:",
+								"	xyz",
+								"example.go:123: Expected and obtained are different.",
+							},
+						},
+						{
+							Name:   "TestFour/#01",
+							Time:   0,
+							Result: parser.SKIP,
+							Output: []string{
+								"example.go:1234: Not supported yet.",
+							},
+						},
+						{
+							Name:   "TestFour/#02",
+							Time:   0,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestFive",
+							Time:   0,
+							Result: parser.SKIP,
+							Output: []string{
+								"example.go:1392: Not supported yet.",
+							},
+						},
+						{
+							Name:   "TestSix",
+							Time:   0,
+							Result: parser.FAIL,
+							Output: []string{
+								"example.go:371: This should not fail!",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		name:       "13-syntax-error.txt",
+		reportName: "13-report.xml",
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name: "package/name/passing1",
+					Time: 100,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestA",
+							Time:   100,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+					},
+				},
+				{
+					Name: "package/name/passing2",
+					Time: 100,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestB",
+							Time:   100,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+					},
+				},
+				{
+					Name: "package/name/failing1",
+					Tests: []*parser.Test{
+						{
+							Name:   "[build failed]",
+							Time:   0,
+							Result: parser.FAIL,
+							Output: []string{
+								"failing1/failing_test.go:15: undefined: x",
+							},
+						},
+					},
+				},
+				{
+					Name: "package/name/failing2",
+					Tests: []*parser.Test{
+						{
+							Name:   "[build failed]",
+							Time:   0,
+							Result: parser.FAIL,
+							Output: []string{
+								"failing2/another_failing_test.go:20: undefined: y",
+							},
+						},
+					},
+				},
+				{
+					Name: "package/name/setupfailing1",
+					Tests: []*parser.Test{
+						{
+							Name:   "[setup failed]",
+							Time:   0,
+							Result: parser.FAIL,
+							Output: []string{
+								"setupfailing1/failing_test.go:4: cannot find package \"other/package\" in any of:",
+								"\t/path/vendor (vendor tree)",
+								"\t/path/go/root (from $GOROOT)",
+								"\t/path/go/path (from $GOPATH)",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		name:       "14-panic.txt",
+		reportName: "14-report.xml",
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name: "package/panic",
+					Time: 3,
+					Tests: []*parser.Test{
+						{
+							Name:   "Failure",
+							Result: parser.FAIL,
+							Output: []string{
+								"panic: init",
+								"stacktrace",
+							},
+						},
+					},
+				},
+				{
+					Name: "package/panic2",
+					Time: 3,
+					Tests: []*parser.Test{
+						{
+							Name:   "Failure",
+							Result: parser.FAIL,
+							Output: []string{
+								"panic: init",
+								"stacktrace",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		name:       "15-empty.txt",
+		reportName: "15-report.xml",
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name:  "package/empty",
+					Time:  1,
+					Tests: []*parser.Test{},
+				},
+			},
+		},
+	},
+	{
+		name:       "16-repeated-names.txt",
+		reportName: "16-report.xml",
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name: "package/repeated-names",
+					Time: 1,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestRepeat",
+							Time:   0,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestRepeat",
+							Time:   0,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestRepeat",
+							Time:   0,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		name:       "17-race.txt",
+		reportName: "17-report.xml",
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name: "race_test",
+					Time: 15,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestRace",
+							Time:   0,
+							Result: parser.FAIL,
+							Output: []string{
+								"test output",
+								"2 0xc4200153d0",
+								"==================",
+								"WARNING: DATA RACE",
+								"Write at 0x00c4200153d0 by goroutine 7:",
+								"  race_test.TestRace.func1()",
+								"      race_test.go:13 +0x3b",
+								"",
+								"Previous write at 0x00c4200153d0 by goroutine 6:",
+								"  race_test.TestRace()",
+								"      race_test.go:15 +0x136",
+								"  testing.tRunner()",
+								"      /usr/local/Cellar/go/1.8.3/libexec/src/testing/testing.go:657 +0x107",
+								"",
+								"Goroutine 7 (running) created at:",
+								"  race_test.TestRace()",
+								"      race_test.go:14 +0x125",
+								"  testing.tRunner()",
+								"      /usr/local/Cellar/go/1.8.3/libexec/src/testing/testing.go:657 +0x107",
+								"",
+								"Goroutine 6 (running) created at:",
+								"  testing.(*T).Run()",
+								"      /usr/local/Cellar/go/1.8.3/libexec/src/testing/testing.go:697 +0x543",
+								"  testing.runTests.func1()",
+								"      /usr/local/Cellar/go/1.8.3/libexec/src/testing/testing.go:882 +0xaa",
+								"  testing.tRunner()",
+								"      /usr/local/Cellar/go/1.8.3/libexec/src/testing/testing.go:657 +0x107",
+								"  testing.runTests()",
+								"      /usr/local/Cellar/go/1.8.3/libexec/src/testing/testing.go:888 +0x4e0",
+								"  testing.(*M).Run()",
+								"      /usr/local/Cellar/go/1.8.3/libexec/src/testing/testing.go:822 +0x1c3",
+								"  main.main()",
+								"      _test/_testmain.go:52 +0x20f",
+								"==================",
+								"testing.go:610: race detected during execution of test",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		name:       "18-coverpkg.txt",
+		reportName: "18-report.xml",
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name: "package1/foo",
+					Time: 400,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestA",
+							Time:   100,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+						{
+							Name:   "TestB",
+							Time:   300,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+					},
+					CoveragePct: "10.0",
+				},
+				{
+					Name: "package2/bar",
+					Time: 4200,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestC",
+							Time:   4200,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+					},
+					CoveragePct: "99.8",
+				},
+			},
+		},
+	},
 }
 
 func TestParser(t *testing.T) {
@@ -413,7 +796,7 @@ func TestParser(t *testing.T) {
 				testOutput := strings.Join(test.Output, "\n")
 				expTestOutput := strings.Join(expTest.Output, "\n")
 				if testOutput != expTestOutput {
-					t.Errorf("Test.Output ==\n%s\n, want\n%s", testOutput, expTestOutput)
+					t.Errorf("Test.Output (%s) ==\n%s\n, want\n%s", test.Name, testOutput, expTestOutput)
 				}
 			}
 			if pkg.CoveragePct != expPkg.CoveragePct {
@@ -424,15 +807,23 @@ func TestParser(t *testing.T) {
 }
 
 func TestJUnitFormatter(t *testing.T) {
+	testJUnitFormatter(t, "")
+}
+
+func TestVersionFlag(t *testing.T) {
+	testJUnitFormatter(t, "custom-version")
+}
+
+func testJUnitFormatter(t *testing.T, goVersion string) {
 	for _, testCase := range testCases {
-		report, err := loadTestReport(testCase.reportName)
+		report, err := loadTestReport(testCase.reportName, goVersion)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		var junitReport bytes.Buffer
 
-		if err = JUnitReportXML(testCase.report, testCase.noXMLHeader, &junitReport); err != nil {
+		if err = JUnitReportXML(testCase.report, testCase.noXMLHeader, goVersion, &junitReport); err != nil {
 			t.Fatal(err)
 		}
 
@@ -442,14 +833,19 @@ func TestJUnitFormatter(t *testing.T) {
 	}
 }
 
-func loadTestReport(name string) (string, error) {
+func loadTestReport(name, goVersion string) (string, error) {
 	contents, err := ioutil.ReadFile("tests/" + name)
 	if err != nil {
 		return "", err
 	}
 
+	if goVersion == "" {
+		// if goVersion is not specified, default to runtime version
+		goVersion = runtime.Version()
+	}
+
 	// replace value="1.0" With actual version
-	report := strings.Replace(string(contents), `value="1.0"`, fmt.Sprintf(`value="%s"`, runtime.Version()), -1)
+	report := strings.Replace(string(contents), `value="1.0"`, fmt.Sprintf(`value="%s"`, goVersion), -1)
 
 	return report, nil
 }
